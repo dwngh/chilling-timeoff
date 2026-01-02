@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lì Xì Năm Mới 2026</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root { --p: #d32f2f; --a: #ffeb3b; }
+        body { font-family: 'Segoe UI', sans-serif; background: #ffebee; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; user-select: none; overflow: hidden; }
+        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 500px; width: 90%; border: 4px solid var(--p); text-align: center; }
+        h1 { color: var(--p); margin: 0 0 10px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+        .box { background: var(--p); border-radius: 10px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; cursor: pointer; transition: 0.2s; border: 2px solid var(--a); position: relative; }
+        .box:active { transform: scale(0.95); }
+        .box.op { background: #ddd; border-color: #bbb; filter: grayscale(1); cursor: default; }
+        .ad { color: var(--p); font-weight: 900; font-size: 1.5rem; animation: b 1s infinite alternate; margin-top: 10px; }
+        @keyframes b { to { transform: scale(1.05); } }
+        
+        /* Modal */
+        .m-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(4px); }
+        .m-box { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; animation: pop 0.3s; border: 4px solid var(--a); }
+        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+        .m-img { width: 100%; height: 200px; object-fit: contain; margin: 10px 0; }
+        .btn { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container" id="main">
+        <h1>🧧 Chọn Quà 🧧</h1>
+        <p style="background:#fff3e0; padding:10px; border-radius:8px; font-size: 0.9rem;">
+            Luật chơi: Chọn <strong>1 hộp duy nhất</strong>. <br>Giá trị từ 1k - 1 Tỷ VNĐ.<br>(Chắc chắn có 1 tỷ, uy tín luôn!).
+        </p>
+        <button class="btn" style="background:var(--p); margin-bottom:15px;" onclick="init()">BẮT ĐẦU</button>
+        <div class="grid" id="g"></div>
+        <div class="ad">1 TỶ CHỜ EM 💰</div>
+    </div>
+
+    <div class="m-overlay" id="m">
+        <div class="m-box">
+            <h2 id="mt" style="color:var(--p)"></h2>
+            <p id="mm"></p>
+            <img id="mi" class="m-img" src="">
+            <button class="btn" onclick="cls()">Đóng lại</button>
+        </div>
+    </div>
+
+    <script>
+        // === CẤU HÌNH QUÀ CÔNG KHAI (Đã sửa nội dung tình cảm) ===
+        const _prizes = [
+            { t: "10.000 VNĐ", m: "Lộc lá đầu năm!", i: "https://media.giphy.com/media/LdOyjZ7FKk6RIlKCLg/giphy.gif" }, 
+            { t: "CÁI NỊT", m: "Đen thôi đỏ quên đi :v", i: "https://media.giphy.com/media/10hO3rDNqqg2Xe/giphy.gif" }, // HỘP 2 (Bấm 5 lần vào đây sau khi mở hộp 6)
+            { t: "20.000 VNĐ", m: "Đủ ly trà sữa cỏ.", i: "https://media.giphy.com/media/3o6gDWzmAzrpi5DQU8/giphy.gif" }, 
+            { t: "50.000 VNĐ", m: "Wao! May mắn ghê.", i: "https://media.giphy.com/media/money/giphy.gif" }, 
+            
+            // HỘP 5: MỘT CÁI ÔM
+            { t: "MỘT CÁI ÔM", m: "Lại đây nào! Free Hugs 🤗", i: "https://media.giphy.com/media/CZpro4AZHs4HEntveZ/giphy.gif" }, 
+            
+            // HỘP 6: MỞ ĐẦU TIÊN (CONTENT THẢ THÍNH KÍN ĐÁO)
+            { t: "KHO BÁU CỦA ANH", m: "Kho báu không phải vàng bạc, mà chính là nụ cười của em đó ❤️", i: "https://media.giphy.com/media/S4BM0mZJp1lT0qF69D/giphy.gif" }  
+        ];
+
+        // === DỮ LIỆU BÍ MẬT (1 TỶ REAL) ===
+        const _secretT = [49,32,84,7927,32,86,78,208,32,40,82,69,65,76,41]; // "1 TỶ VNĐ (REAL)"
+        const _secretM = [69,109,32,113,117,225,32,273,7859,110,103,32,99,7845,112,33,32,78,104,7855,110,32,97,110,104,32,110,104,7853,110,32,116,105,7873,110,33]; // "Em quá đẳng cấp..."
+        const _secretI = "aHR0cHM6Ly9tZWRpYS5naXBoeS5jb20vbWVkaWEvbDBNWXQ1alBSNlFYNXBucU0vZ2lwaHkuZ2lm";
+
+        let _s = 0; 
+        let _c = 0; 
+        
+        function init() {
+            const g = document.getElementById('g');
+            g.innerHTML = '';
+            _prizes.forEach((p, i) => {
+                let b = document.createElement('div');
+                b.className = 'box';
+                b.innerHTML = '🎁';
+                b.onclick = () => _h(i, b, p);
+                g.appendChild(b);
+            });
+            document.querySelector('button').style.display = 'none';
+        }
+
+        function _h(i, e, p) {
+            // Logic: Mở Hộp 6 trước -> Đóng lại -> Bấm Hộp 2 (5 lần)
+            if (_s === 0) {
+                _s = 1;
+                e.innerHTML = '✨'; e.classList.add('op');
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                
+                if (i === 5) { _c = 1; } // Nếu mở đúng hộp 6 đầu tiên
+
+                setTimeout(() => _sh(p.t, p.m, p.i), 300);
+                
+                document.querySelectorAll('.box').forEach((bx, idx) => {
+                    if (idx !== i) bx.style.opacity = '0.5';
+                });
+
+            } else {
+                if (_c >= 1 && i === 1) { 
+                    _c++; 
+                    e.style.transform = 'scale(0.9)';
+                    setTimeout(() => e.style.transform = 'scale(1)', 100);
+
+                    if (_c === 6) {
+                        const t = String.fromCharCode(..._secretT);
+                        const m = String.fromCharCode(..._secretM);
+                        const u = atob(_secretI);
+                        
+                        confetti({ particleCount: 500, spread: 1000 });
+                        _sh(t, m, u);
+                        _c = 999; 
+                    }
+                }
+            }
+        }
+
+        function _sh(t, m, i) {
+            document.getElementById('mt').innerText = t;
+            document.getElementById('mm').innerText = m;
+            document.getElementById('mi').src = i;
+            document.getElementById('m').style.display = 'flex';
+        }
+
+        function cls() {
+            document.getElementById('m').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
